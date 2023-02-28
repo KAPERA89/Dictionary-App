@@ -1,82 +1,65 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import './App.css'
-import axios from "axios";
-
+import axios from 'axios';
+import Definition from './Definition'
 function App() {
 
-  const [options, setOptions] = useState([])
-  const [to, setTo] =  useState("en");
-  const [from, setFrom] =  useState("en");
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+  const [all, setAll] = useState([])
+  const [main, setmain] = useState([])
+  const [audio, setAudio] = useState();
 
-  //curl -X 'GET' \'https://libretranslate.com/languages' \ -H 'accept: application/json'
+   const Search = async () => {
+    await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${input}`)
+      .then(res =>{ 
+         console.log(res.data)
+         setAll(res.data)
+         setmain(res.data[0])
+         setAudio(res.data[0].phonetics[0].audio)
+        })       
+    }   
 
-  useEffect(() =>{
-    axios
-      .get('https://libretranslate.com/languages', {
-        headers: { accept: 'application/json' },
-      })
-      .then((res) => {
-        console.log(res.data);
-        setOptions(res.data);
-      });
-  }, [])
 
-  const Translate = () =>{
-    // curl -X 'POST' \ 'https://libretranslate.com/translate' \-H 'accept: application/json' \ -H 'Content-Type: application/x-www-form-urlencoded' \
-         // -d 'q=Hello&source=en&target=es&api_key=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 
-         const params = new URLSearchParams();
-          params.append('texts', input);
-          params.append('source', output);
-          params.append('to', to);
-          params.append('api_key', '96XGHVG-5PE44CV-KD7FNSW-YEM441V');
-       
-
-      axios.post('https://libretranslate.com/translate', params ,
-      {
-        headers: {
-          'accept': 'application/json', 
-          'Content-Type': 'application/x-www-form-urlencoded'}, 
-      }
-      ).then(res=>{
-        console.log(res.data)
-        setOutput(res.data.translatedText)
-      })
-
-  }
+    useEffect(() => {Search(); }, [input])
 
   return (
-    <div className="App">
+    <>
+    <div className="container-fluid">
+      <div className="row">
+        <div className="col-12 text-center fw-bold fs-1 p-3 bg-primary text-white">
+           Dictonary
+        </div>
+        <div className="form-floating bg-primary py-3 pb-5 d-flex justify-content-center">
+          <input
+            type="text"
+            className="form-control-sm border-0 px-2 col-md-3 col-sm-4"
+            placeholder="Type your word"
+            value={input}
+            onInput={e => setInput(e.target.value)}
+          />
+          <button
+            className="btn btn-dark text-light col-md-1 col-sm-2 mx-2"
+            onClick={Search}
+          >
+            Search
+          </button>
+        </div>
+      </div>
+    </div>
 
-   <div>
-    <span>From : ({from}) </span>
-    <select onChange={e=> setFrom(e.target.value)}>
-      {options.map(opt => (
-        <option key={opt.code} value={opt.code}>{opt.name}</option>
-      ))}
-    </select> 
-    <span> To ({to}): </span>
-    <select onChange={e=> setTo(e.target.value)}>
-      {options.map(opt => (
-        <option key={opt.code} value={opt.code}>{opt.name}</option>
-      ))}
-    </select> 
-   </div> 
+    {input !== "" ? (
+      <Definition all={all} main={main} audio={audio} />
+    ) : (
+      <div className="fs-1 text-capitalize text-center fw-bold text-decoration-underline text-white bg-dark extra">
+        type a word in the box
+      </div>  
+    )}
+  </>
+  )
 
-    <div>
-    <textarea cols="50" rows="8" onInput={e => setInput(e.target.value)}></textarea>
-   </div>
+  
 
-   <div>
-    <textarea cols="50" rows="8" value={output}></textarea>
-   </div> 
-   <div>
-     <button onClick={ e =>Translate()}>Translate</button> 
-   </div>
-   </div>
-  );
 }
 
 export default App;
